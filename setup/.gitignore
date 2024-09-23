@@ -1,0 +1,9 @@
+*
+
+# Ignore all configurations except the default config and the template configurations
+!.gitignore
+!requirements_unix.txt
+!requirements_windows.txt
+!user_path_definitions_template.yml
+!README.md
+!setup.py
