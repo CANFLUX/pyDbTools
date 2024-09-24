@@ -1,9 +1,0 @@
-# !!This is a template file!!
-
-# Make a copy of this template file and delete "_template" from the filename
-# Then define the paths accordingly
-rootDir:
-  # Path to your EddyPro installation, 
-  EddyPro: C:/Program Files/LI-COR/EddyPro-7.0.9/
-relDir:
-  Database: Database/
