@@ -1,0 +1,3 @@
+[submodule "setupPyVenv"]
+	path = setupPyVenv
+	url = https://github.com/CANFLUX/setupPyVenv
