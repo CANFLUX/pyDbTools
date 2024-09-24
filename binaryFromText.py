@@ -17,6 +17,7 @@ class writeTraces():
     def __init__(self,siteID,inputFile,inputFileMetaData,**kwargs):
         # Default arguments
         defaultKwargs = {
+            'wd':os.path.dirname(os.path.realpath(__file__)),
             'database':None,
             'writeCols':None,
             'excludeCols':[],

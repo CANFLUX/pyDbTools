@@ -14,9 +14,9 @@ import os
 import sys
 import json
 import argparse
+import readConfig
 import numpy as np
 import pandas as pd
-import readConfig as rCfg
 from datetime import datetime,date
 
 os.chdir(os.path.split(__file__)[0])
@@ -26,6 +26,7 @@ defaultDateRange = [date(datetime.now().year,1,1),datetime.now()]
 
 # Default arguments
 defaultArgs = {
+    'wd':os.path.dirname(os.path.realpath(__file__)),
     'siteID':'BB',
     'dateRange':[date(datetime.now().year,1,1).strftime("%Y-%m-%d"),datetime.now().strftime("%Y-%m-%d")],
     'database':'None',
@@ -43,7 +44,7 @@ def makeCSV(**kwargs):
     tasks = kwargs['tasks']
     siteID = kwargs['siteID']
     
-    config = rCfg.set_user_configuration({'tasks':tasks})
+    config = readConfig.set_user_configuration(tasks={'tasks':tasks})
     # Use default if user does not provide alternative
     if kwargs['outputPath'] == 'None':
         outputPath = config['rootDir']['outputs']
@@ -79,7 +80,7 @@ def makeCSV(**kwargs):
             [np.fromfile(f"{root}{YYYY}/{file}",config['dbase_metadata']['timestamp']['dtype']) for YYYY in Years],
             axis=0)
         
-        DT = pd.to_datetime(tv-config['dbase_metadata']['timestamp']['base'],unit=config['dbase_metadata']['timestamp']['base_unit']).round('S')
+        DT = pd.to_datetime(tv-config['dbase_metadata']['timestamp']['base'],unit=config['dbase_metadata']['timestamp']['base_unit']).round('s')
         differences = DT.to_series().diff()
         expected_difference = pd.Timedelta(config['dbase_metadata']['timestamp']['resolution'])
         anomalies = ((differences != expected_difference)&(pd.isnull(differences) == False))
