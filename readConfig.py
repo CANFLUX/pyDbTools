@@ -12,7 +12,6 @@ def set_user_configuration(pathDeffs = '../config_files/user_path_definitions.ym
     wd = os.getcwd()
     # temporarily set directory
     os.chdir(os.path.split(__file__)[0])
-    print(pathDeffs,tasks)
     pathDeffs = os.path.abspath(pathDeffs)
     # Parse the config settings
     with open('config_files/config.yml') as yml:
