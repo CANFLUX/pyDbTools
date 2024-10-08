@@ -3,6 +3,7 @@
 
 import os
 import json
+import yaml
 import shutil
 import fnmatch
 import argparse
@@ -34,10 +35,24 @@ class writeTraces():
             self.config['rootDir']['database'] = self.kwargs['database']
         if self.kwargs['stage'] in self.config['stage'].keys():
             self.kwargs['stage'] = self.config['stage'][self.kwargs['stage']]
-        if 'parse_dates' in inputFileMetaData and type(inputFileMetaData['parse_dates'])==list:
+        
+        if 'parse_dates' in inputFileMetaData and type(inputFileMetaData['parse_dates'])==list and inputFileMetaData['parse_dates'] != ['TIMESTAMP']:
             val = inputFileMetaData['parse_dates']
-            key = tuple(['TIMESTAMP']+['' for i in range(len(inputFileMetaData['header'])-1)])
+            if len(inputFileMetaData['header']) > 1:
+                key = tuple(['TIMESTAMP']+['' for i in range(len(inputFileMetaData['header'])-1)])
+            else:
+                key = 'TIMESTAMP'
             inputFileMetaData['parse_dates'] = {key:val}
+        if os.path.isdir(inputFile):
+            for dir, _, fileList in os.walk(inputFile):
+                for file in fileList:
+                    print(f'Processing: {file}')
+                    self.read(f"{dir}/{file}",inputFileMetaData)
+        elif os.path.isfile(inputFile):
+            self.read(inputFile,inputFileMetaData)
+
+
+    def read(self,inputFile,inputFileMetaData):
         df = pd.read_csv(inputFile,**inputFileMetaData)
         df.columns = df.columns.get_level_values(0)   
         df.index = df['TIMESTAMP']
@@ -190,8 +205,6 @@ if __name__ == '__main__':
     # Parse the args and make the call
     args = CLI.parse_args()
 
-    print(args.stage)
-
     kwargs = {
         'database':args.database,
         'writeCols':args.writeCols,
@@ -201,7 +214,12 @@ if __name__ == '__main__':
         'tag':args.tag
         }
     
-    inputFileMetaData = json.loads(args.inputFileMetaData)
+    if os.path.isfile(args.inputFileMetaData):
+        with open(args.inputFileMetaData) as yml:
+            inputFileMetaData = yaml.safe_load(yml)
+    
+    else:
+        inputFileMetaData = json.loads(args.inputFileMetaData)
 
 
     writeTraces(args.siteID,args.inputFile,inputFileMetaData,**kwargs)

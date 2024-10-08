@@ -1,0 +1,8 @@
+# Kwargs for reading data
+na_values: 
+- NAN
+- -9999
+header: [1]
+skiprows: [2,3]
+parse_dates: ['TIMESTAMP']
+date_format: '%Y-%m-%d %H:%M:%S'
