@@ -75,17 +75,17 @@ def makeCSV(**kwargs):
         columns_tuple = []
         # Create a blank dataframe
         df = pd.DataFrame()
-        file = f"{siteID}/{task['stage']}/{config['dbase_metadata']['timestamp']['name']}"
+        file = f"{siteID}/{task['stage']}/{config['dbase_metadata']['clean_tv']['name']}"
         tv = np.concatenate(
-            [np.fromfile(f"{root}{YYYY}/{file}",config['dbase_metadata']['timestamp']['dtype']) for YYYY in Years],
+            [np.fromfile(f"{root}{YYYY}/{file}",config['dbase_metadata']['clean_tv']['dtype']) for YYYY in Years],
             axis=0)
         
-        DT = pd.to_datetime(tv-config['dbase_metadata']['timestamp']['base'],unit=config['dbase_metadata']['timestamp']['base_unit']).round('s')
+        DT = pd.to_datetime(tv-config['dbase_metadata']['clean_tv']['base'],unit=config['dbase_metadata']['clean_tv']['base_unit']).round('s')
         differences = DT.to_series().diff()
-        expected_difference = pd.Timedelta(config['dbase_metadata']['timestamp']['resolution'])
+        expected_difference = pd.Timedelta(config['dbase_metadata']['clean_tv']['resolution'])
         anomalies = ((differences != expected_difference)&(pd.isnull(differences) == False))
         if anomalies.sum()>1:
-            ipt = input(f'Warning: timestamp file {file} appears to be corrupted.  Attempt to coerce Y/N')
+            ipt = input(f'Warning: clean_tv file {file} appears to be corrupted.  Attempt to coerce Y/N')
             if ipt.lower() == 'y':
                 DT_s = DT.to_series()
                 DT_s[anomalies] = pd.NaT

@@ -70,16 +70,18 @@ class writeTraces():
                 data={'TIMESTAMP':pd.date_range(
                     start = f'{self.y}01010030',
                     end=f'{self.y+1}01010001',
-                    freq=self.config['dbase_metadata']['timestamp']['resolution']
+                    freq=self.config['dbase_metadata']['clean_tv']['resolution']
                     )})
             self.Year = self.Year.set_index('TIMESTAMP')
             self.Year = self.Year.join(self.df)
-            epoch = datetime(1970,1,1,0,0)
-            self.Year['Floor'] = self.Year.index.floor(self.config['dbase_metadata']['timestamp']['base_unit'])
-            secsPerBase = pd.Timedelta('1'+self.config['dbase_metadata']['timestamp']['base_unit']).total_seconds()
+            self.Year['POSIX_timestamp'] = self.Year.index.to_series().apply(lambda x: x.timestamp())
+            print(self.Year['POSIX_timestamp'])
+            # Create clean_tv for backwards compatibility with Matlab scripts
+            self.Year['Floor'] = self.Year.index.floor(self.config['dbase_metadata']['clean_tv']['base_unit'])
+            secsPerBase = pd.Timedelta('1'+self.config['dbase_metadata']['clean_tv']['base_unit']).total_seconds()
             self.Year['frac'] = ((self.Year.index-self.Year['Floor']).dt.seconds/secsPerBase)
-            self.Year['base'] = np.floor((self.Year.index-epoch).total_seconds()/secsPerBase+int(self.config['dbase_metadata']['timestamp']['base']))
-            self.Year[self.config['dbase_metadata']['timestamp']['name']] = self.Year['frac']+self.Year['base']
+            self.Year['base'] = np.floor((self.Year.index-datetime(1970,1,1,0,0)).total_seconds()/secsPerBase+int(self.config['dbase_metadata']['clean_tv']['base']))
+            self.Year['clean_tv'] = self.Year['frac']+self.Year['base']
             self.Year = self.Year.drop(columns=['Floor','frac','base'])
             self.write()
         
@@ -93,8 +95,8 @@ class writeTraces():
             print(f"{db} does not exist, creating new directory")
             os.makedirs(db)
         for traceName in self.Year.columns:
-            if traceName == self.config["dbase_metadata"]["timestamp"]["name"]:
-                dt = self.config["dbase_metadata"]["timestamp"]["dtype"]
+            if traceName in self.config["dbase_metadata"].keys():
+                dt = self.config["dbase_metadata"][traceName]["dtype"]
             else:
                 dt = self.config["dbase_metadata"]["traces"]["dtype"]
             fvar = self.Year[traceName].astype(dt).values

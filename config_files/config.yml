@@ -1,7 +1,9 @@
 # Information for parsing database files
 dbase_metadata:
-  timestamp: 
-    name: clean_tv
+  POSIX_timestamp:
+    dtype: float64
+    precision: 8
+  clean_tv: 
     dtype: float64
     precision: 8
     base: 719529
