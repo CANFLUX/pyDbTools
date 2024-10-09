@@ -3,6 +3,7 @@ dbase_metadata:
   POSIX_timestamp:
     dtype: float64
     precision: 8
+    base_unit: s
   clean_tv: 
     dtype: float64
     precision: 8

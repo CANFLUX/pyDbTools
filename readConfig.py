@@ -7,12 +7,13 @@ import sys
 import yaml # Note: you need to install the "pyyaml" package, e.g., pip install pyyaml
 import argparse
 
-def set_user_configuration(pathDeffs = '../config_files/user_path_definitions.yml',tasks={}):
+def set_user_configuration(pathDeffs = 'config_files/user_path_definitions.yml',tasks={}):
     # get current crectory
     wd = os.getcwd()
     # temporarily set directory
     os.chdir(os.path.split(__file__)[0])
     pathDeffs = os.path.abspath(pathDeffs)
+    print(wd)
     # Parse the config settings
     with open('config_files/config.yml') as yml:
         config = yaml.safe_load(yml)

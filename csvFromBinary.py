@@ -27,7 +27,7 @@ defaultDateRange = [date(datetime.now().year,1,1),datetime.now()]
 # Default arguments
 defaultArgs = {
     'wd':os.path.dirname(os.path.realpath(__file__)),
-    'siteID':'BB',
+    'siteID':'SCL',
     'dateRange':[date(datetime.now().year,1,1).strftime("%Y-%m-%d"),datetime.now().strftime("%Y-%m-%d")],
     'database':'None',
     'outputPath':'None',
@@ -47,12 +47,12 @@ def makeCSV(**kwargs):
     config = readConfig.set_user_configuration(tasks={'tasks':tasks})
     # Use default if user does not provide alternative
     if kwargs['outputPath'] == 'None':
-        outputPath = config['rootDir']['outputs']
+        outputPath = os.getcwd()
     else: outputPath = kwargs['outputPath']
 
     # Root directory of the database
     if kwargs['database'] == 'None':
-        root = config['rootDir']['database']
+        root = config['rootDir']['Database']
     else: root = kwargs['database']
 
     Range_index = pd.DatetimeIndex(kwargs['dateRange'])
@@ -75,23 +75,21 @@ def makeCSV(**kwargs):
         columns_tuple = []
         # Create a blank dataframe
         df = pd.DataFrame()
-        file = f"{siteID}/{task['stage']}/{config['dbase_metadata']['clean_tv']['name']}"
-        tv = np.concatenate(
-            [np.fromfile(f"{root}{YYYY}/{file}",config['dbase_metadata']['clean_tv']['dtype']) for YYYY in Years],
-            axis=0)
-        
-        DT = pd.to_datetime(tv-config['dbase_metadata']['clean_tv']['base'],unit=config['dbase_metadata']['clean_tv']['base_unit']).round('s')
-        differences = DT.to_series().diff()
-        expected_difference = pd.Timedelta(config['dbase_metadata']['clean_tv']['resolution'])
-        anomalies = ((differences != expected_difference)&(pd.isnull(differences) == False))
-        if anomalies.sum()>1:
-            ipt = input(f'Warning: clean_tv file {file} appears to be corrupted.  Attempt to coerce Y/N')
-            if ipt.lower() == 'y':
-                DT_s = DT.to_series()
-                DT_s[anomalies] = pd.NaT
-                DT = pd.DatetimeIndex(DT_s.interpolate())
-            elif ipt.lower() != 'n':
-                sys.exit()
+        try:
+            file = f"{siteID}/{task['stage']}/{'POSIX_timestamp'}"
+            tv = np.concatenate(
+                [np.fromfile(f"{root}/{YYYY}/{file}",config['dbase_metadata']['POSIX_timestamp']['dtype']) for YYYY in Years],
+                axis=0)
+            DT = pd.to_datetime(tv,unit=config['dbase_metadata']['POSIX_timestamp']['base_unit']).round('s')
+        except:
+            print('No POSIX timestamp available, defaulting to MATLAB datenum')
+            file = f"{siteID}/{task['stage']}/{'clean_tv'}"
+            tv = np.concatenate(
+                [np.fromfile(f"{root}/{YYYY}/{file}",config['dbase_metadata']['clean_tv']['dtype']) for YYYY in Years],
+                axis=0)
+            
+            DT = pd.to_datetime(tv-config['dbase_metadata']['clean_tv']['base'],unit=config['dbase_metadata']['clean_tv']['base_unit']).round('s')
+            pass
         for time_trace,formatting in task['formatting']['time_vectors'].items():
             traces[time_trace] = DT.floor('Min').strftime(formatting['fmt'])
             # Add name-unit pairs to column header list
@@ -104,7 +102,7 @@ def makeCSV(**kwargs):
             # if exists (over full period) output
             try:
                 file = f"{siteID}/{task['stage']}/{trace_name}"
-                trace = [np.fromfile(f"{root}{YYYY}/{file}",config['dbase_metadata']['traces']['dtype']) for YYYY in Years]
+                trace = [np.fromfile(f"{root}/{YYYY}/{file}",config['dbase_metadata']['traces']['dtype']) for YYYY in Years]
                 traces[trace_name]=np.concatenate(trace,axis=0)
             # give NaN if traces does not exist
             except:

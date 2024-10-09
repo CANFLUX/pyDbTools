@@ -25,6 +25,7 @@ class writeTraces():
             'mode':'nafill',
             'stage':'Flux',
             'tag':'',
+            'fileType':'dat',
             'verbose':True
             }
         # Apply defaults where not defined
@@ -46,8 +47,12 @@ class writeTraces():
         if os.path.isdir(inputFile):
             for dir, _, fileList in os.walk(inputFile):
                 for file in fileList:
-                    print(f'Processing: {file}')
-                    self.read(f"{dir}/{file}",inputFileMetaData)
+                    if file.endswith(self.kwargs['fileType']):
+                        try:
+                            self.read(f"{dir}/{file}",inputFileMetaData)
+                        except:
+                            print(f"Failed to process: {file}")
+                            pass
         elif os.path.isfile(inputFile):
             self.read(inputFile,inputFileMetaData)
 
@@ -203,6 +208,13 @@ if __name__ == '__main__':
         type=str,
         default='',
         )
+    
+    CLI.add_argument(
+        "--fileType",
+        nargs='?',
+        type=str,
+        default='dat'
+    )
 
     # Parse the args and make the call
     args = CLI.parse_args()
@@ -213,7 +225,8 @@ if __name__ == '__main__':
         'excludeCols':args.excludeCols,
         'stage':args.stage,
         'mode':args.mode,
-        'tag':args.tag
+        'tag':args.tag,
+        'fileType':args.fileType
         }
     
     if os.path.isfile(args.inputFileMetaData):
