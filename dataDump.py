@@ -15,7 +15,7 @@ import re
 
 defaultArgs = {
     'byYear':True,
-    'byMonth':False,
+    'byMonth':True,
     'parseDate':True,
     'overWrite':False,
     'reset':False,
@@ -41,29 +41,29 @@ class mapEcDir():
         for k, v in kwargs.items():
             setattr(self, k, v)
         self.config = rCfg.set_user_configuration(tasks={'fileTypes':'config_files/ecFileFormats.yml'})
-        if self.dIn is not None:
-            if self.fileType !='':
-                fileInfo=self.config['fileTypes'][self.fileType]
-            else: 
-                fileInfo = None
-            if self.dOut is None:
-                inventory = self.dIn+'/fileInventory.csv'
-            else:
-                if os.path.isdir(self.dOut) == False:
-                    os.makedirs(self.dOut)
-                inventory = self.dOut+'/fileInventory.csv'
-            if self.reset == True:    
-                uIn = input('Warning: type "reset" to confirm the reset\n')
-                if uIn == 'reset':
-                    if self.dOut is not None and self.dOut != self.dIn:
-                        shutil.rmtree(self.dOut)
-                else:
-                    sys.exit()
-            elif os.path.isfile(inventory):
-                self.fileInventory = pd.read_csv(inventory)
-            self.buildInventory(fileInfo)
-            if hasattr(self,'fileInventory'):
-                self.fileInventory.to_csv(inventory,index=False)
+        # if self.dIn is not None:
+        #     if self.fileType !='':
+        #         fileInfo=self.config['fileTypes'][self.fileType]
+        #     else: 
+        #         fileInfo = None
+            # if self.dOut is None:
+            #     inventory = self.dIn+'/fileInventory.csv'
+            # else:
+            #     if os.path.isdir(self.dOut) == False:
+            #         os.makedirs(self.dOut)
+            #     inventory = self.dOut+'/fileInventory.csv'
+            # if self.reset == True:    
+            #     uIn = input('Warning: type "reset" to confirm the reset\n')
+            #     if uIn == 'reset':
+            #         if self.dOut is not None and self.dOut != self.dIn:
+            #             shutil.rmtree(self.dOut)
+            #     else:
+            #         sys.exit()
+            # elif os.path.isfile(inventory):
+            #     self.fileInventory = pd.read_csv(inventory)
+            # self.buildInventory(fileInfo)
+            # if hasattr(self,'fileInventory'):
+            #     self.fileInventory.to_csv(inventory,index=False)
 
     def buildInventory(self,fileInfo):
         for dir, _, fileList in os.walk(self.dIn):
@@ -152,7 +152,6 @@ class mapEcDir():
             cmd=[option, source, dest]
             if option == 'xcopy':
                 cmd.append('/s')
-        # print(cmd)
         if cmd:
             proc = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
         if Verbose==True:
@@ -180,7 +179,6 @@ if __name__ == '__main__':
     args = CLI.parse_args()
     kwargs = vars(args)
     for d in dictArgs:
-        # print(kwargs[d])
         kwargs[d] = json.loads(kwargs[d])
     mapEcDir(**kwargs)
     
