@@ -17,6 +17,7 @@ defaultArgs = {
     'byYear':True,
     'byMonth':True,
     'parseDate':True,
+    'standardizeNames':True,
     'overWrite':False,
     'reset':False,
     'fileType':'',
@@ -41,33 +42,33 @@ class mapEcDir():
         for k, v in kwargs.items():
             setattr(self, k, v)
         self.config = rCfg.set_user_configuration(tasks={'fileTypes':'config_files/ecFileFormats.yml'})
-        # if self.dIn is not None:
-        #     if self.fileType !='':
-        #         fileInfo=self.config['fileTypes'][self.fileType]
-        #     else: 
-        #         fileInfo = None
-            # if self.dOut is None:
-            #     inventory = self.dIn+'/fileInventory.csv'
-            # else:
-            #     if os.path.isdir(self.dOut) == False:
-            #         os.makedirs(self.dOut)
-            #     inventory = self.dOut+'/fileInventory.csv'
-            # if self.reset == True:    
-            #     uIn = input('Warning: type "reset" to confirm the reset\n')
-            #     if uIn == 'reset':
-            #         if self.dOut is not None and self.dOut != self.dIn:
-            #             shutil.rmtree(self.dOut)
-            #     else:
-            #         sys.exit()
-            # elif os.path.isfile(inventory):
-            #     self.fileInventory = pd.read_csv(inventory)
-            # self.buildInventory(fileInfo)
-            # if hasattr(self,'fileInventory'):
-            #     self.fileInventory.to_csv(inventory,index=False)
+        if self.dIn is not None:
+            if self.fileType !='':
+                fileInfo=self.config['fileTypes'][self.fileType]
+            else: 
+                fileInfo = None
+            if self.dOut is None:
+                inventory = self.dIn+'/fileInventory.csv'
+            else:
+                if os.path.isdir(self.dOut) == False:
+                    os.makedirs(self.dOut)
+                inventory = self.dOut+'/fileInventory.csv'
+            if self.reset == True:    
+                uIn = input('Warning: type "reset" to confirm the reset\n')
+                if uIn == 'reset':
+                    if self.dOut is not None and self.dOut != self.dIn:
+                        shutil.rmtree(self.dOut)
+                else:
+                    sys.exit()
+            elif os.path.isfile(inventory):
+                self.fileInventory = pd.read_csv(inventory)
+            self.buildInventory(fileInfo)
+            if hasattr(self,'fileInventory'):
+                self.fileInventory.to_csv(inventory,index=False)
 
     def buildInventory(self,fileInfo):
+        print('Searching ',self.dIn)
         for dir, _, fileList in os.walk(self.dIn):
-            print(dir)
             if hasattr(self,'fileInventory'):
                 fileList = [s for s in fileList if s not in self.fileInventory['source'].values]
             if self.searchTag !='':
@@ -77,12 +78,7 @@ class mapEcDir():
             if fileInfo is not None:
                 fileList = [f for f in fileList if f.endswith(fileInfo['extension'])]
             source = [os.path.abspath(dir+'/'+f) for f in fileList]
-    
-            if self.parseDate == True: 
-                filename,Interval = self.reName(fileInfo,fileList)
-            else:
-                filename = fileList
-                Interval = [i for i in range(len(fileList))]
+            filename,Interval = self.reName(fileInfo,fileList)
             if len(source)>0:
                 if self.dOut is None:
                     dpath = source
@@ -102,6 +98,7 @@ class mapEcDir():
                     if os.path.isdir(self.dOut) == False:
                         os.makedirs(self.dOut)
                     pb = progressbar(len(source),f'{self.mode}: {dir.replace(self.dIn,"")}')
+                    dpath = [os.path.abspath(d) for d in dpath]
                     for s,p,f in zip(source,dpath,filename):
                         if hasattr(self,'fileInventory') == False:
                             self.pasteWithSubprocess(s,p,option=self.mode)
@@ -124,17 +121,22 @@ class mapEcDir():
                                                             'source':source})
 
     def reName(self,fileInfo,fileList):
-        srch = [re.search(fileInfo['search'], f.rsplit('.',1)[0]).group(0) for f in fileList]
-        Interval = [datetime.datetime.strptime(s,fileInfo['format']) for s in srch]
-        if self.timeShift != '':
-            Interval = [t + pd.Timedelta(self.timeShift) for t in Interval]
-        timeString = [datetime.datetime.strftime(t,fileInfo['format']) for t in Interval]
-        tag = '_'.join(self.searchTag)
-        if self.nameTag != '':
-            filename = [f"{self.nameTag}_{tag}_{t}.{self.fileType}" for t in timeString]
+        if self.parseDate == False: 
+            filename = fileList
+            Interval = [i for i in range(len(fileList))]
         else:
-            filename = [f"{tag}_{t}.{self.fileType}" for t in timeString]
-        Interval = pd.to_datetime(Interval)
+            srch = [re.search(fileInfo['search'], f.rsplit('.',1)[0]).group(0) for f in fileList]
+            Interval = [datetime.datetime.strptime(s,fileInfo['format']) for s in srch]
+            if self.timeShift != '':
+                Interval = [t + pd.Timedelta(self.timeShift) for t in Interval]
+            timeString = [datetime.datetime.strftime(t,fileInfo['format']) for t in Interval]
+            if self.nameTag != '':
+                self.searchTag.insert(0,self.nameTag)
+            tag = '_'.join(self.searchTag)
+            if len(tag)>0:tag=tag+'_'
+            filename = [f"{tag}{ts}.{self.fileType}" for ts in timeString]
+            Interval = pd.to_datetime(Interval)
+            print(filename)
         return (filename,Interval)
 
     def pasteWithSubprocess(self,source, dest, option = 'copy',Verbose=False):
