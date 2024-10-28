@@ -7,7 +7,7 @@ import sys
 import yaml # Note: you need to install the "pyyaml" package, e.g., pip install pyyaml
 import argparse
 
-def set_user_configuration(pathDeffs = 'config_files/user_path_definitions.yml',requests={}):
+def set_user_configuration(pathDeffs = 'config_files/user_defined/user_path_definitions.yml',requests={}):
     # get current crectory
     wd = os.getcwd()
     # temporarily set directory
@@ -39,26 +39,27 @@ def set_user_configuration(pathDeffs = 'config_files/user_path_definitions.yml',
     return(config)
 
 # If called from command line ...
-if __name__ == '__main__':
+# May revise later, maybe not necessary, only intended to be called by other scripts
+# if __name__ == '__main__':
     
-    CLI=argparse.ArgumentParser()
+#     CLI=argparse.ArgumentParser()
 
-    CLI.add_argument(
-        "--pathDeffs",
-        nargs = '?',
-        type = str,
-        default = '../user_path_definitions.yml'
-    )
+#     CLI.add_argument(
+#         "--pathDeffs",
+#         nargs = '?',
+#         type = str,
+#         default = '../user_defined/user_path_definitions.yml'
+#     )
 
-    CLI.add_argument(
-        "--requests", 
-        nargs='+',
-        type=str,
-        default=[],
-        )
+#     CLI.add_argument(
+#         "--requests", 
+#         nargs='+',
+#         type=str,
+#         default=[],
+#         )
 
-    # Parse the args and make the call
-    args = CLI.parse_args()
+#     # Parse the args and make the call
+#     args = CLI.parse_args()
 
-    args.requests = {k:v for k,v in zip(args.requests[0::2],args.requests[1::2])}
-    set_user_configuration(args.pathDeffs,args.requests)
+#     args.requests = {k:v for k,v in zip(args.requests[0::2],args.requests[1::2])}
+#     set_user_configuration(args.pathDeffs,args.requests)
